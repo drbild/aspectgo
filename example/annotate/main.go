@@ -10,7 +10,9 @@ import (
 	"github.com/AkihiroSuda/aspectgo/example/annotate/validate"
 )
 
-var validHello validate.ValidateFunc = validate.StringInSlice(validate.ValidValues(), false)
+var validHello validate.ValidateFunc = validate.StringInSlice(validate.ValidHelloValues(), false)
+var validGoodbye validate.ValidateFunc = validate.StringInSlice(validate.ValidGoodbyeValues(), false)
+var validMonthCode validate.ValidateFunc = validate.IntBetween(1, 12)
 
 func sayHello(s string) {
 	valid := validHello(s)
@@ -21,21 +23,34 @@ func sayHello(s string) {
 	}
 }
 
+func logFunc(name string, f interface{}) {
+	fmt.Println(name)
+	if funcInfo, ok := types.FuncLog[reflect.ValueOf(f)]; ok {
+		fmt.Println("\tType:", funcInfo.Name)
+		switch funcInfo.Name {
+		case "StringInSlice":
+			values, _ := json.Marshal(funcInfo.Args[0])
+			ignore, _ := json.Marshal(funcInfo.Args[1])
+			fmt.Println("\tValues:", string(values))
+			fmt.Println("\tIgnoreCase:", string(ignore))
+		case "IntBetween":
+			min, _ := json.Marshal(funcInfo.Args[0])
+			max, _ := json.Marshal(funcInfo.Args[1])
+			fmt.Println("\tMin", string(min))
+			fmt.Println("\tMax", string(max))
+		}
+	} else {
+		fmt.Println("\tNot Found")
+	}
+
+}
+
 func main() {
 	sayHello("hola")
 	sayHello("bonjour")
 	sayHello("goodbye")
 
-	if validHelloInfo, ok := types.FuncLog[reflect.ValueOf(validHello)]; ok {
-		fmt.Println("validHello", validHelloInfo.Name)
-		fmt.Println("\tType:", validHelloInfo.Name)
-		switch validHelloInfo.Name {
-		case "StringInSlice":
-			values, _ := json.Marshal(validHelloInfo.Args[0])
-			ignore, _ := json.Marshal(validHelloInfo.Args[1])
-			fmt.Println("\tValues:", string(values))
-			fmt.Println("\tIgnoreCase:", string(ignore))
-		}
-	}
-
+	logFunc("validHello", validHello)
+	logFunc("validGoodbye", validGoodbye)
+	logFunc("validMonthCode", validMonthCode)
 }
